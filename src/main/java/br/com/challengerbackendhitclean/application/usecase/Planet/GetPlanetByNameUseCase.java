@@ -4,10 +4,10 @@ import br.com.challengerbackendhitclean.application.gateway.PlanetGateway;
 import br.com.challengerbackendhitclean.application.usecase.UseCase;
 import br.com.challengerbackendhitclean.domain.entity.Planet;
 
-public class GetPlanetByName implements UseCase<String, Planet> {
+public class GetPlanetByNameUseCase implements UseCase<String, Planet> {
 
     private final PlanetGateway planetGateway;
-    public GetPlanetByName(PlanetGateway planetGateway) {
+    public GetPlanetByNameUseCase(PlanetGateway planetGateway) {
         this.planetGateway = planetGateway;
     }
 
