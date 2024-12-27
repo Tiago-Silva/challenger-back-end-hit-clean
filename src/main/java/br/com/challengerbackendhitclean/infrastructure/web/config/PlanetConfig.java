@@ -5,8 +5,10 @@ import br.com.challengerbackendhitclean.application.usecase.Planet.*;
 import br.com.challengerbackendhitclean.infrastructure.core.gateway.PlanetRepositoryGateway;
 import br.com.challengerbackendhitclean.infrastructure.core.mapper.PlanetMapper;
 import br.com.challengerbackendhitclean.infrastructure.data.repository.PlanetRepository;
+import br.com.challengerbackendhitclean.infrastructure.data.service.SwApiClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
 public class PlanetConfig {
@@ -49,5 +51,15 @@ public class PlanetConfig {
     @Bean
     public PlanetMapper planetMapper() {
         return new PlanetMapper();
+    }
+
+    @Bean
+    public SwApiClient swApiClient(WebClient.Builder webClientBuilder) {
+        return new SwApiClient(webClientBuilder);
+    }
+
+    @Bean
+    public WebClient.Builder webClientBuilder() {
+        return WebClient.builder();
     }
 }
