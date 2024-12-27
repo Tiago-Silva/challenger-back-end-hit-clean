@@ -1,14 +1,19 @@
 package br.com.challengerbackendhitclean.infrastructure.web.controller;
 
 import br.com.challengerbackendhitclean.application.usecase.Planet.*;
+import br.com.challengerbackendhitclean.domain.entity.Planet;
 import br.com.challengerbackendhitclean.infrastructure.core.mapper.PlanetMapper;
+import br.com.challengerbackendhitclean.infrastructure.data.service.StarWarsPlanets;
+import br.com.challengerbackendhitclean.infrastructure.data.service.SwApiClient;
 import br.com.challengerbackendhitclean.infrastructure.web.dto.PlanetRequestDTO;
 import br.com.challengerbackendhitclean.infrastructure.web.dto.PlanetResponseDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/planet")
@@ -21,7 +26,8 @@ public class PlanetController {
     private final DeletePlanetUseCase deletePlanetUseCase;
     private final GetPlanetByNameUseCase getPlanetByNameUseCase;
     private final PlanetMapper mapper;
-    public PlanetController(CreatePlanetUseCase createPlanetUseCase, GetAllPlanetsUseCase getAllPlanetsUseCase, GetPlanetByIdUseCase getPlanetByIdUseCase, UpdatePlanetUseCase updatePlanetUseCase, DeletePlanetUseCase deletePlanetUseCase, GetPlanetByNameUseCase getPlanetByNameUseCase, PlanetMapper mapper) {
+    private final SwApiClient swApiClient;
+    public PlanetController(CreatePlanetUseCase createPlanetUseCase, GetAllPlanetsUseCase getAllPlanetsUseCase, GetPlanetByIdUseCase getPlanetByIdUseCase, UpdatePlanetUseCase updatePlanetUseCase, DeletePlanetUseCase deletePlanetUseCase, GetPlanetByNameUseCase getPlanetByNameUseCase, PlanetMapper mapper, SwApiClient swApiClient) {
         this.createPlanetUseCase = createPlanetUseCase;
         this.getAllPlanetsUseCase = getAllPlanetsUseCase;
         this.getPlanetByIdUseCase = getPlanetByIdUseCase;
@@ -29,11 +35,22 @@ public class PlanetController {
         this.deletePlanetUseCase = deletePlanetUseCase;
         this.getPlanetByNameUseCase = getPlanetByNameUseCase;
         this.mapper = mapper;
+        this.swApiClient = swApiClient;
     }
 
     @PostMapping
     public ResponseEntity<HttpStatus> createPlanet(@RequestBody PlanetRequestDTO requestDTO) {
-        this.createPlanetUseCase.execute(this.mapper.requestDTOToDomainObject(requestDTO));
+        
+        Integer planetId = StarWarsPlanets.getIdByName(requestDTO.name());
+        if (planetId == null || planetId == 0) {
+            throw new IllegalArgumentException("Invalid planet name");
+        }
+
+        Mono<Integer> filmAppearances = this.swApiClient.getFilmAppearances(planetId.toString());
+        System.out.println("Film appearances: " + filmAppearances.block());
+
+        Planet planet = this.mapper.requestDTOToDomainObject(new PlanetRequestDTO(requestDTO.name(), requestDTO.climate(), requestDTO.terrain(), Objects.requireNonNull(filmAppearances.block()).toString()));
+        this.createPlanetUseCase.execute(planet);
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
